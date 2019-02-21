@@ -9,11 +9,8 @@ import numpy as np
 def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     '''
     Determine the intersection of two lines given only the endpoints
-    :param x1:
-    :param y1:
-    :param x2:
-    :param y2:
-    :return:
+    :return: Coordinates of the lines, if any, in tuple form. It also returns t and u in tuple form.
+    if both t and u are between 0 and 1.0, then the intersection exists between the two line segments.
     '''
 
     Px_a = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
@@ -27,9 +24,27 @@ def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     t_u = (x1-x3)*(y3-y4)-(y1-y3)*(x3-x4)
     t_d = (x1-x2)*(y3-y4)-(y1-y2)*(x3*x4)
 
+    u_u = (x1-x2)*(y1-y3)-(y1-y2)*(x1-x3)
+    u_d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
+
+    u = -1*(u_u/u_d)
     t = t_u/t_d
 
-    return (Px, Py)
+    return (Px, Py), (t,u)
+
+def draw_lines(src, lines):
+    '''
+    Draws all lines from a HoughLineP transform onto a source image
+    :param src: 
+    :param lines: 
+    :return: 
+    '''
+    try:
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv.line(src, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    except TypeError:
+        print "No lines detected"
 
 
 print("open webcam")
@@ -38,7 +53,7 @@ detector = cv.SimpleBlobDetector()
 
 while True:
     # ret, frame = webcam.read()
-    frame = cv.imread("chess.jpg")
+    frame = cv.imread("chess2.jpg")
     size = frame.shape
 
     # if the image is too large, resize it
@@ -81,22 +96,18 @@ while True:
     edges = cv.Canny(frameMaskedGray, 100, 150, apertureSize=3)
 
     lines = cv.HoughLinesP(edges, 1, 3.14159/180, 50, minLineLength=0, maxLineGap=100)
-    try:
-        for line in lines:
-            for x1, y1, x2, y2 in line:
-                cv.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    except TypeError:
-        print "No lines detected"
+    draw_lines(frame, lines)
 
     # Create a new image using the four corners of the detected chess board
     # Start by remaking the contour mask
-    mask = np.zeros(mask.shape, dtype="uint8")
-    cv.drawContours(mask, [cont], -1, (255,255,255), thickness=3)
-    lines = cv.HoughLinesP(mask, 1, 3.14/180, 50)
+    mask = cv.Canny(mask,50,255)
+    lines = cv.HoughLinesP(mask, 1, 3.14/720, 10, minLineLength=5, maxLineGap=300)
+    draw_lines(frame_masked, lines)
+
     # Create our numpy array for storing points in an image
     point_coords = []
     for i in range(1, len(lines)):
-        intersect = intersection(lines[i][0][0], lines[i][0][1], lines[i][0][2], lines[i][0][3], lines[i-1][0][0], lines[i-1][0][1], lines[i-1][0][2], lines[i-1][0][3])
+        intersect, constr = intersection(lines[i][0][0], lines[i][0][1], lines[i][0][2], lines[i][0][3], lines[i-1][0][0], lines[i-1][0][1], lines[i-1][0][2], lines[i-1][0][3])
         if intersect == 0:
             continue
         else:

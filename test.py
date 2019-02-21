@@ -1,11 +1,8 @@
 def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     '''
     Determine the intersection of two lines given only the endpoints
-    :param x1:
-    :param y1:
-    :param x2:
-    :param y2:
-    :return:
+    :return: Coordinates of the lines, if any, in tuple form. It also returns t and u in tuple form.
+    if both t and u are between 0 and 1.0, then the intersection exists between the two line segments.
     '''
 
     Px_a = (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
@@ -21,9 +18,13 @@ def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     t_u = (x1-x3)*(y3-y4)-(y1-y3)*(x3-x4)
     t_d = (x1-x2)*(y3-y4)-(y1-y2)*(x3*x4)
 
+    u_u = (x1-x2)*(y1-y3)-(y1-y2)*(x1-x3)
+    u_d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
+
+    u = -1*(u_u/u_d)
     t = t_u/t_d
 
-    return (Px, Py)
+    return (Px, Py), (t,u)
 
 
 def line_intersection(line1, line2):
@@ -45,5 +46,6 @@ def line_intersection(line1, line2):
 
 print line_intersection(((0,0), (2,4)), ((4,0), (2,2)))
 
-res = intersection(0.,0.,2.,4.,4.,0.,2.,2.)
+res, b = intersection(0.,0.,2.,4.,4.,0.,2.,2.)
 print res
+print b
